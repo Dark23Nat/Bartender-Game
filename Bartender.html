@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bartender Training & Challenge</title>
+  <style>
+    :root {
+      --bg: #12141b;
+      --panel: #1b1e26;
+      --panel-2: #2a2e42;
+      --text: #f0f0f0;
+      --accent: #c49b3a;
+      --accent-2: #e6b84e;
+      --muted: #9aa0a6;
+      --success: #4caf50;
+      --error: #e57373;
+      --gold: #d4af37;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0; background: var(--bg); color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    }
+    header {
+      background: linear-gradient(180deg, #0e1117 0%, #171a21 100%);
+      padding: 18px 24px; text-align: center; border-bottom: 1px solid #242833;
+    }
+    header h1 {
+      margin: 0; font-size: 24px; letter-spacing: 0.5px;
+    }
+    header p {
+      margin: 6px 0 0; color: var(--muted);
+    }
+    .container {
+      max-width: 1100px; margin: 0 auto; padding: 24px;
+      display: grid; grid-template-columns: 340px 1fr; gap: 24px;
+    }
+    .sidebar {
+      background: var(--panel); border-radius: 12px; padding: 16px; border: 1px solid #242833;
+    }
+    .content {
+      background: var(--panel); border-radius: 12px; padding: 16px; border: 1px solid #242833;
+    }
+    .bartender {
+      background: var(--panel-2);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      border: 1px solid #36405f;
+    }
+    .bartender img {
+      max-height: 280px; border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    }
+    .mode-buttons, .menu-actions {
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    button {
+      padding: 10px 14px; font-size: 15px; border: none; border-radius: 8px;
+      background: var(--accent); color: #12141b; cursor: pointer; transition: 0.2s;
+    }
+    button:hover { background: var(--accent-2); }
+    .ghost { background: transparent; color: var(--text); border: 1px solid #3c4154; }
+    .ghost:hover { background: #262b3b; }
+    .list {
+      margin-top: 12px; display: grid; gap: 8px;
+      max-height: 460px; overflow: auto; padding-right: 6px;
+    }
+    .card {
+      background: #1e2230; border: 1px solid #2b3144; border-radius: 10px; padding: 12px;
+      cursor: pointer; transition: 0.2s;
+    }
+    .card:hover { border-color: #3a4666; transform: translateY(-1px); }
+    .card h3 { margin: 0 0 6px; font-size: 16px; color: var(--gold); }
+    .card p { margin: 0; color: var(--muted); font-size: 13px; }
+    .pill {
+      display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px;
+      background: #27304a; border: 1px solid #3a4666; color: #cdd4e7; margin-right: 6px;
+    }
+    .panel {
+      background: var(--panel-2); border: 1px solid #3a4054; border-radius: 10px; padding: 12px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .section-title { margin: 0 0 8px; font-size: 16px; color: var(--gold); }
+    .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .score { font-weight: 600; color: var(--gold); }
+    .feedback { margin-top: 8px; font-size: 14px; }
+    .feedback.ok { color: var(--success); }
+    .feedback.bad { color: var(--error); }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .choice {
+      background: #222633; border: 1px solid #2e3447; border-radius: 8px; padding: 10px;
+      cursor: pointer; transition: 0.15s; font-size: 14px;
+    }
+    .choice:hover { border-color: #3a4666; background: #272c3f; }
+    .mini {
+      font-size: 12px; color: var(--muted);
+    }
+    .footer-note { margin-top: 8px; color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🍸 Bartender Training & Challenge</h1>
+    <p>Upscale speakeasy vibe. Learn, practice, and prove your cocktail mastery.</p>
+  </header>
+
+  <div class="container">
+    <!-- Sidebar: bartender + mode -->
+    <div class="sidebar">
+      <div class="bartender">
+        <img id="bartenderImg" src="bartender_idle.jpg" alt="Bartender" />
+        <div class="mode-buttons">
+          <button onclick="setMode('lesson')">Lesson mode</button>
+          <button class="ghost" onclick="setMode('challenge')">Challenge mode</button>
+        </div>
+        <div class="row">
+          <span class="mini">Image extension</span>
+          <div class="mode-buttons">
+            <button class="ghost" onclick="setImageExt('jpg')">.jpg</button>
+            <button class="ghost" onclick="setImageExt('png')">.png</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top: 12px;">
+        <div class="row">
+          <span class="section-title">Menu</span>
+          <div class="menu-actions">
+            <button class="ghost" onclick="browseAll()">Browse cocktails</button>
+          </div>
+        </div>
+        <div id="cocktailList" class="list"></div>
+      </div>
+    </div>
+
+    <!-- Content: recipe card + mode panels -->
+    <div class="content">
+      <div id="recipeCard" class="panel" style="display:none;">
+        <div class="row">
+          <h2 id="rc_name" style="margin:0;"></h2>
+          <span id="rc_diff" class="pill"></span>
+        </div>
+        <p id="rc_desc" style="margin:6px 0 10px;"></p>
+        <div class="grid-2">
+          <div>
+            <div class="label">Ingredients</div>
+            <ul id="rc_ingredients" style="margin:0; padding-left:18px;"></ul>
+          </div>
+          <div>
+            <div class="label">Instructions</div>
+            <ol id="rc_instructions" style="margin:0; padding-left:18px;"></ol>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:12px;">
+          <div><span class="label">Glassware</span><div id="rc_glass"></div></div>
+          <div><span class="label">Garnish</span><div id="rc_garnish"></div></div>
+        </div>
+        <div style="margin-top:10px;">
+          <span class="label">Taste profile</span>
+          <div id="rc_taste"></div>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <div class="mode-buttons">
+            <button onclick="startLesson()">Start lesson</button>
+            <button class="ghost" onclick="startChallenge()">Start challenge</button>
+          </div>
+          <span class="mini" id="rc_meta"></span>
+        </div>
+      </div>
+
+      <!-- Lesson Mode Panel -->
+      <div id="lessonPanel" class="panel" style="display:none; margin-top:12px;">
+        <div class="row">
+          <span class="section-title">Lesson mode</span>
+          <span class="mini" id="lessonCocktail"></span>
+        </div>
+        <p id="lessonStepText" style="margin:8px 0;"></p>
+        <div class="row">
+          <button onclick="nextLessonStep()">Next step</button>
+          <button class="ghost" onclick="endLesson()">End</button>
+        </div>
+        <div class="footer-note">Bartender performs actions with your images for each step.</div>
+      </div>
+
+      <!-- Challenge Mode Panel -->
+      <div id="challengePanel" class="panel" style="display:none; margin-top:12px;">
+        <div class="row">
+          <span class="section-title">Challenge mode</span>
+          <span class="score" id="scoreText">Score: 0</span>
+        </div>
+        <div class="row">
+          <span class="mini" id="challengeCocktail"></span>
+          <span class="mini" id="challengeProgress"></span>
+        </div>
+        <p id="challengeQuestion" style="margin:8px 0;"></p>
+        <div id="choiceGrid" class="choices"></div>
+        <div id="challengeFeedback" class="feedback"></div>
+        <div class="row" style="margin-top:10px;">
+          <button onclick="skipChallengeStep()" class="ghost">Skip</button>
+          <button onclick="endChallenge()" class="ghost">End</button>
+        </div>
+        <div class="footer-note">Select the correct next ingredient from memory. Accuracy affects your score.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Configuration ---
+    let IMAGE_EXT = 'jpg'; // switch to 'png' if your files are png
+    const bartenderImg = document.getElementById('bartenderImg');
+
+    function setImageExt(ext) {
+      IMAGE_EXT = ext;
+      // Reset to idle using selected ext
+      bartenderImg.src = `bartender_idle.${IMAGE_EXT}`;
+    }
+
+    // --- Dataset (converted from your CSV) ---
+    const cocktails = [
+      {
+       
+        name:"Saffron Old Fashioned",
+        description:"A timeless classic that epitomizes sophistication. This bourbon-based cocktail features a perfect balance of sweetness, bitters, and citrus, served over a large ice cube with an aromatic twist of orange peel.",
+        difficulty:"Easy",
+        ingredients:[
+          {name:"Four Roses Bourbon",amount:"60ml"},
+          {name:"Brown Sugar Cube",amount:"1"},
+          {name:"Angostura Bitters",amount:"3 dashes"},
+          {name:"Saffron Liqueur",amount:"15ml"},
+          {name:"Orange Peel",amount:"1"}
+        ],
+        instructions:[
+          "Add simple syrup and bitters to a rocks glass",
+          "Add one large ice cube",
+          "Pour in the whiskey and stir gently for 30 seconds",
+          "Express orange peel over the drink and drop it in"
+        ],
+        glassware:"Rocks Glass",
+        garnish:"Orange Peel",
+        taste_profile:["Sweet","Bitter","Aromatic","Spirit-Forward"],
+        created_date:"2025-10-05T09:21:57.123000",
+        updated_date:"2025-10-05T10:25:31.476000",
+        is_sample:""
+      },
+      {
+        
+        name:"Red Green Farm",
+        description:"A refreshing and herbaceous gin cooler. The combination of mint, cucumber, and elderflower is topped with lemonade for a perfect summer drink.",
+        difficulty:"Easy",
+        ingredients:[
+          {name:"Hendrick's Gin",amount:"45ml"},
+          {name:"Lemon Juice",amount:"25ml"},
+          {name:"Mint & Cucumber Cordial",amount:"25ml"},
+          {name:"Briottet",amount:"10ml"},
+          {name:"Lemonade",amount:"Top up"}
+        ],
+        instructions:[
+          "Shake all ingredients (except lemonade) with ice.",
+          "Strain into a Collins glass filled with fresh ice.",
+          "Top up with lemonade and stir gently."
+        ],
+        glassware:"Collins",
+        garnish:"Cucumber, Mint & Red Color Drops",
+        taste_profile:["Refreshing","Herbal","Citrusy"],
+        created_date:"2025-10-05T10:05:16.515000",
+        updated_date:"2025-10-05T10:14:03.061000",
+        is_sample:""
+      },
+      {
+        
+        name:"American Gangster",
+        description:"A bold and complex sipper for the discerning palate. A blend of bourbon and cognac, enriched with sweet vermouth and a hint of cola bitters.",
+        difficulty:"Medium",
+        ingredients:[
+          {name:"Four Roses Bourbon",amount:"25ml"},
+          {name:"Remy XO",amount:"25ml"},
+          {name:"Antica Formula Vermouth",amount:"25ml"},
+          {name:"Cola Bitters/ Angustura",amount:"1 drop"}
+        ],
+        instructions:[
+          "Add all ingredients to a mixing glass with one large ice cube.",
+          "Stir until perfectly chilled.",
+          "Double strain into a balloon martini glass."
+        ],
+        glassware:"Balloon Martini",
+        garnish:"Lemon Peel",
+        taste_profile:["Spirit-Forward","Complex","Aromatic"],
+        created_date:"2025-10-05T10:05:16.515000",
+        updated_date:"2025-10-05T10:09:34.706000",
+       is_sample:""
+      },
+      {
+        
+        name:"Rose Romance",
+        description:"An elegant and floral cocktail. Rose-infused gin is beautifully complemented by the exotic sweetness of lychee.",
+        difficulty:"Medium",
+        ingredients:[
+          {name:"Tanqueray Infused with Roses",amount:"50ml"},
+          {name:"Lime Juice",amount:"25ml"},
+          {name:"Lychee Syrup",amount:"25ml"},
+          {name:"Lychee Juice",amount:"25ml"}
+        ],
+        instructions:[
+          "Shake all ingredients with ice.",
+          "Double strain into a champagne flute adorned with rose petals."
+        ],
+        glassware:"Champagne Flute",
+        garnish:"Dry Rose & Rose Petals",
+        taste_profile:["Floral","Sweet","Romantic"],
+        created_date:"2025-10-05T10:05:16.515000",
+        updated_date:"2025-10-05T10:15:09.021000",
+        is_sample:""
+      },
+      {
+        
+        name:"Strawberry on Fire",
+        description:"A tantalizing mix of sweet strawberry and a fiery kick of chili. A vibrant tequila cocktail that's full of life.",
+        difficulty:"Medium",
+        ingredients:[
+          {name:"El Sueño Tequila",amount:"50ml"},
+          {name:"Lime Juice",amount:"25ml"},
+          {name:"Strawberry Syrup",amount:"25ml"},
+          {name:"Strawberry Liqueur",amount:"25ml"},
+          {name:"Small Slice of Chili",amount:"1 dash"}
+        ],
+        instructions:[
+          "Shake all ingredients with ice.",
+          "Double strain into a chilled coupe glass."
+        ],
+        glassware:"Coupe",
+        garnish:"Dry Lime & Dry Chili",
+        taste_profile:["Spicy","Sweet","Fruity"],
+        created_date:"2025-10-05T10:05:16.515000",
+        updated_date:"2025-10-05T10:15:55.799000",
+        is_sample:""
+      },
+      {
+        
+        name:"Salted Caramel Espresso Martini (Coffee martini)",
+        description:"A decadent and energizing twist on the classic. Rich espresso and smooth vodka meet the irresistible sweetness of salted caramel, finished with a touch of cacao.",
+        difficulty:"Medium",
+        ingredients:[
+          {name:"Monshine Vanilla Vodka",amount:"25ml"},
+          {name:"Finland Vodka",amount:"25ml"},
+          {name:"Espresso Coffee",amount:"45ml"},
+          {name:"Coffee Liqueur (Kahlua)",amount:"25ml"},
+          {name:"Salted Caramel Syrup",amount:"10ml"}
+        ],
+        instructions:[
+          "Shake all ingredients vigorously with ice.",
+          "Double strain into a chilled coupe glass."
+        ],
+        glassware:"Coupe",
+        garnish:"4 Coffee Beans & Cacao Powder",
+        taste_profile:["Rich","Coffee","Sweet","Dessert"],
+        created_date:"2025-10-05T10:05:16.515000",
+        updated_date:"2025-10-05T10:18:13.267000",
+        is_sample:""
+      },
+      {
+        
+        name:"Goji Whisky Sour",
+        description:"A modern, superfood-infused take on the Whiskey Sour. Goji liqueur adds a unique fruity tartness, balanced by a silky egg white foam and aromatic bitters.",
+        difficulty:"Advanced",
+        ingredients:[
+          {name:"Red Label Whisky",amount:"45ml"},
+          {name:"Lemon Juice",amount:"25ml"},
+          {name:"Goji Liqueur",amount:"25ml"},
+          {name:"Simple Syrup",amount:"10ml"},
+          {name:"Angostura Bitters",amount:"1 dash"},
+          {name:"Egg White",amount:"1"}
+        ],
+        instructions:[
+          "Dry shake all ingredients without ice.",
+          "Add ice and shake again until well-chilled.",
+          "Double strain into a rocks glass with fresh ice."
+        ],
+        glassware:"Rocks Glass",
+        garnish:"Dry Lemon & Bitters Garnish",
+        taste_profile:["Sour","Fruity","Silky"],
+        created_date:"2025-10-05T10:05:16.515000",
+        updated_date:"2025-10-05T10:19:29.124000",
+        is_sample:""
+      },
+      {
+        
+        name:"Pandan Old Fashion",
+        description:"",
+        difficulty:"Easy",
+        ingredients:[
+          {name:"Four Roses Bourbon",amount:"60ml"},
+          {name:"Brown Sugar Cube",amount:"1"},
+          {name:"Angostura Bitter",amount:"3 dashes"},
+          {name:"Pandan Syrup",amount:"20ml"},
+          {name:"Orange Peel",amount:"1"}
+        ],
+        instructions:[
+          "Stir",
+          "Double Strain"
+        ],
+        glassware:"Rocks",
+        garnish:"Orange Peel",
+        taste_profile:[],
+        created_date:"2025-10-05T10:28:33.154000",
+        updated_date:"2025-10-05T11:05:44.030000",
+        is_sample:""
+      },
+      {
+        
+        name:"Biscuit Cloud",
+        description:"",
+        difficulty:"",
+        ingredients:[
+          {name:"Biscuit Gin",amount:"60ml"},
+          {name:"Honey Syrup",amount:"30ml"},
+          {name:"Lemon Juice",amount:"25ml"},
+          {name:"Frangelico",amount:"20ml"},
+          {name:"Cacao Bitter",amount:"2 dash"},
+          {name:"Miraculous Foamer",amount:"1 dash"},
+          {name:"Biscuit powder",amount:"some"}
+        ],
+        instructions:[
+          "Dry Shake",
+          "Shake",
+          "Double Strain"
+        ],
+        glassware:"Couple",
+        garnish:"Biscuit Powder",
+        taste_profile:[],
+        created_date:"2025-10-05T10:32:17.295000",
+        updated_date:"2025-10-05T11:05:19.081000",
+        is_sample:""
+      },
+      {
+        
+        name:"Mediterranean Love",
+        description:"",
+        difficulty:"",
+        ingredients:[
+          {name:"Gin",amount:"45ml"},
+          {name:"Lemon Juice",amount:"25ml"},
+          {name:"HM Fig Liqueur",amount:"25ml"},
+          {name:"Simple Syrup",amount:"20ml"},
+          {name:"Amaro Montenegro",amount:"25ml"},
+          {name:"Mint Leaver",amount:"2"},
+          {name:"Egg White",amount:"1"}
+        ],
+        instructions:[
+          "Dry Shake",
+          "Double Strain"
+        ],
+        glassware:"rocks",
+        garnish:"Fry Fig",
+        taste_profile:[],
+        created_date:"2025-10-05T10:35:11.614000",
+        updated_date:"2025-10-05T11:04:47.585000",
+        is_sample:""
+      },
+      {
+        
+        name:"Nope It's Not a GT (Mint & Cucumber Cordial)",
+        description:"",
+        difficulty:"",
+        ingredients:[
+          {name:"Lemon Juice",amount:"25ml"},
+          {name:"Cucumber & Mint Cordial",amount:"25ml"},
+          {name:"Vanilla Syrup",amount:"10ml"}
+        ],
+        instructions:[
+          "Shake"
+        ],
+        glassware:"Collins",
+        garnish:"Cucumber & Mint",
+        taste_profile:[],
+        created_date:"2025-10-05T10:41:24.234000",
+        updated_date:"2025-10-05T11:04:15.410000",
+        is_sample:""
+      },
+      {
+        
+        name:"Hibiscus Lemonade/ Rose Lemonade",
+        description:"",
+        difficulty:"Easy",
+        ingredients:[
+          {name:"Lemon Juice",amount:"45ml"},
+          {name:"Lime Soda",amount:"Top up"}
+        ],
+        instructions:[
+          "Build"
+        ],
+        glassware:"Collins",
+        garnish:"Lime Wheel",
+        taste_profile:[],
+        created_date:"2025-10-05T10:43:17.191000",
+        updated_date:"2025-10-05T11:04:05.835000",
+        is_sample:""
+      },
+      {
+       
+        name:"Passion & Berries",
+        description:"",
+        difficulty:"",
+        ingredients:[
+          {name:"Raspberry",amount:"2"},
+          {name:"Blackberry",amount:"1"},
+          {name:"Apple Juice",amount:"40ml"},
+          {name:"Cranberry Juice",amount:"30ml"},
+          {name:"Passion Fruit Juice",amount:"30ml"},
+          {name:"Pineapple Juice ",amount:"20ml"},
+          {name:"Vanilla Syrup",amount:"5ml"}
+        ],
+        instructions:[
+          "Muddle and Shake"
+        ],
+        glassware:"Tulip",
+        garnish:"Raspberry, Blackberry & Mint",
+        taste_profile:[],
+        created_date:"2025-10-05T10:46:41.672000",
+        updated_date:"2025-10-05T11:03:17.001000",
+        is_sample:""
+      },
+      {
+        
+        name:"Virgin Bloody Mary",
+        description:"",
+        difficulty:"",
+        ingredients:[
+          {name:"Tomato Juice",amount:"120ml"},
+          {name:"Bloody Mary Mix",amount:"35ml"},
+          {name:"Lemon Juice",amount:"15ml"},
+          {name:"Simple Syrup",amount:"15ml"}
+        ],
+        instructions:[
+          "Thrown"
+        ],
+        glassware:"Collins",
+        garnish:"Cherry tomato, colory & mint",
+        taste_profile:[],
+        created_date:"2025-10-05T10:50:34.048000",
+        updated_date:"2025-10-05T11:03:39.349000",
+        is_sample:""
+      },
+      {
+      
+        name:"Moustache Emoji",
+        description:"",
+        difficulty:"",
+        ingredients:[
+          {name:"Rose Syrup",amount:"25ml"},
+          {name:"Lychee Juice",amount:"25ml"},
+          {name:"Lime Juice",amount:"25ml"},
+          {name:"Cranberry Juice",amount:"50ml"},
+          {name:"Butterfly Double Cream",amount:"Top up"}
+        ],
+        instructions:[
+          "Shake"
+        ],
+        glassware:"Collins",
+        garnish:"Dry Rose",
+        taste_profile:[],
+        created_date:"2025-10-05T10:53:23.569000",
+        updated_date:"2025-10-05T11:03:52.125000",
+        is_sample:""
+      }
+    ];
+
+    // --- UI: list + recipe card ---
+    const listEl = document.getElementById('cocktailList');
+    const rc = {
+      card: document.getElementById('recipeCard'),
+      name: document.getElementById('rc_name'),
+      diff: document.getElementById('rc_diff'),
+      desc: document.getElementById('rc_desc'),
+      ing: document.getElementById('rc_ingredients'),
+      ins: document.getElementById('rc_instructions'),
+      glass: document.getElementById('rc_glass'),
+      garnish: document.getElementById('rc_garnish'),
+      taste: document.getElementById('rc_taste'),
+      meta: document.getElementById('rc_meta')
+    };
+
+    let selectedCocktail = null;
+    let currentMode = 'lesson'; // or 'challenge'
+
+    function browseAll() {
+      listEl.innerHTML = '';
+      cocktails.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <h3>${escapeHtml(c.name)}</h3>
+          <p>${escapeHtml(c.description || 'No description')}</p>
+          <div style="margin-top:8px;">
+            <span class="pill">${c.difficulty || '—'}</span>
+            <span class="pill">${c.glassware || 'Glass'}</span>
+            <span class="pill">${(c.taste_profile || []).join(' • ') || 'Taste'}</span>
+          </div>
+        `;
+        div.onclick = () => openRecipe(c);
+        listEl.appendChild(div);
+      });
+    }
+
+    function openRecipe(c) {
+      selectedCocktail = c;
+      rc.card.style.display = 'block';
+      rc.name.textContent = c.name;
+      rc.diff.textContent = c.difficulty || '—';
+      rc.desc.textContent = c.description || '—';
+      rc.ing.innerHTML = '';
+      c.ingredients.forEach(i => {
+        const li = document.createElement('li');
+        li.textContent = `${i.name} — ${i.amount}`;
+        rc.ing.appendChild(li);
+      });
+      rc.ins.innerHTML = '';
+      c.instructions.forEach(i => {
+        const li = document.createElement('li');
+        li.textContent = i;
+        rc.ins.appendChild(li);
+      });
+      rc.glass.textContent = c.glassware || '—';
+      rc.garnish.textContent = c.garnish || '—';
+      rc.taste.innerHTML = (c.taste_profile || []).map(t => `<span class="pill">${escapeHtml(t)}</span>`).join(' ') || '<span class="mini">—</span>';
+      rc.meta.textContent = `Updated: ${c.updated_date?.split('T')[0] || '—'}`;
+      // Set title hints
+      document.getElementById('lessonCocktail').textContent = `Learning: ${c.name}`;
+      document.getElementById('challengeCocktail').textContent = `Testing: ${c.name}`;
+      document.getElementById('challengeFeedback').textContent = '';
+      document.getElementById('scoreText').textContent = 'Score: 0';
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('lessonPanel').style.display = mode === 'lesson' ? 'block' : 'none';
+      document.getElementById('challengePanel').style.display = mode === 'challenge' ? 'block' : 'none';
+    }
+
+    // --- Animations ---
+    function playAction(action, duration=1100) {
+      bartenderImg.src = `bartender_${action}.${IMAGE_EXT}`;
+      setTimeout(() => { bartenderImg.src = `bartender_idle.${IMAGE_EXT}`; }, duration);
+    }
+
+    function actionFromInstruction(text) {
+      const t = (text || '').toLowerCase();
+      if (t.includes('shake')) return 'shake';
+      if (t.includes('stir')) return 'stir';
+      if (t.includes('muddle')) return 'stir';
+      if (t.includes('build') || t.includes('add') || t.includes('pour') || t.includes('top up') || t.includes('strain') || t.includes('double strain') || t.includes('thrown')) return 'pour';
+      if (t.includes('garnish') || t.includes('express') || t.includes('peel')) return 'garnish';
+      if (t.includes('serve')) return 'serve';
+      return 'stir';
+    }
+
+    function actionFromIngredient(name) {
+      const n = (name || '').toLowerCase();
+      if (n.includes('peel') || n.includes('mint') || n.includes('garnish') || n.includes('rose petals')) return 'garnish';
+      if (n.includes('egg white')) return 'shake';
+      return 'pour';
+    }
+
+    // --- Lesson Mode ---
+    const lessonPanel = document.getElementById('lessonPanel');
+    const lessonStepText = document.getElementById('lessonStepText');
+    let lessonIndex = 0;
+
+    function startLesson() {
+      if (!selectedCocktail) return;
+      setMode('lesson');
+      lessonPanel.style.display = 'block';
+      lessonIndex = 0;
+      showLessonStep();
+    }
+
+    function showLessonStep() {
+      if (!selectedCocktail) return;
+      const steps = selectedCocktail.instructions;
+      if (lessonIndex < steps.length) {
+        const step = steps[lessonIndex];
+        lessonStepText.textContent = step;
+        playAction(actionFromInstruction(step));
+      } else {
+        lessonStepText.textContent = 'Cocktail complete! 🍹';
+        playAction('serve', 900);
+      }
+    }
+
+    function nextLessonStep() {
+      if (!selectedCocktail) return;
+      lessonIndex++;
+      showLessonStep();
+    }
+
+    function endLesson() {
+      lessonPanel.style.display = 'none';
+      bartenderImg.src = `bartender_idle.${IMAGE_EXT}`;
+    }
+
+    // --- Challenge Mode ---
+    const challengePanel = document.getElementById('challengePanel');
+    const challengeQuestion = document.getElementById('challengeQuestion');
+    const choiceGrid = document.getElementById('choiceGrid');
+    const challengeFeedback = document.getElementById('challengeFeedback');
+    const scoreText = document.getElementById('scoreText');
+    const challengeProgress = document.getElementById('challengeProgress');
+
+    let challengeIndex = 0;
+    let challengeScore = 0;
+    let challengeSequence = [];
+
+    function startChallenge() {
+      if (!selectedCocktail) return;
+      setMode('challenge');
+      challengePanel.style.display = 'block';
+      challengeIndex = 0;
+      challengeScore = 0;
+      challengeFeedback.textContent = '';
+      scoreText.textContent = 'Score: 0';
+      // Build sequence using ingredient order
+      challengeSequence = [...selectedCocktail.ingredients];
+      renderChallengeStep();
+    }
+
+    function renderChallengeStep() {
+      if (challengeIndex >= challengeSequence.length) {
+        challengeQuestion.textContent = 'Challenge complete! 🏆';
+        choiceGrid.innerHTML = '';
+        challengeFeedback.className = 'feedback ok';
+        challengeFeedback.textContent = `Final score: ${challengeScore} / ${challengeSequence.length * 10}`;
+        playAction('serve', 900);
+        return;
+      }
+      const target = challengeSequence[challengeIndex];
+      challengeQuestion.textContent = `Select the next ingredient: ${target.amount ? '(' + target.amount + ')' : ''}`;
+      challengeProgress.textContent = `Step ${challengeIndex + 1} / ${challengeSequence.length}`;
+
+      // Generate distractors from other cocktails
+      const pool = cocktails
+        .flatMap(c => c.ingredients)
+        .filter(i => i.name !== target.name);
+      shuffle(pool);
+      const distractors = pool.slice(0, 3);
+
+      const options = shuffle([target, ...distractors]);
+
+      choiceGrid.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = 'choice';
+        btn.innerHTML = `
+          <div><strong>${escapeHtml(opt.name)}</strong></div>
+          <div class="mini">${escapeHtml(opt.amount || '')}</div>
+        `;
+        btn.onclick = () => checkChallengeAnswer(opt, target);
+        choiceGrid.appendChild(btn);
+      });
+    }
+
+    function checkChallengeAnswer(selected, correct) {
+      const isCorrect = selected.name === correct.name;
+      if (isCorrect) {
+        challengeScore += 10;
+        challengeFeedback.className = 'feedback ok';
+        challengeFeedback.textContent = '✅ Correct!';
+        scoreText.textContent = `Score: ${challengeScore}`;
+        playAction(actionFromIngredient(correct.name));
+        challengeIndex++;
+        setTimeout(renderChallengeStep, 900);
+      } else {
+        challengeScore = Math.max(0, challengeScore - 5);
+        challengeFeedback.className = 'feedback bad';
+        challengeFeedback.textContent = `❌ Not quite. Correct: ${correct.name}`;
+        scoreText.textContent = `Score: ${challengeScore}`;
+        playAction('stir', 700); // subtle "thinking" animation on wrong
+        // Keep same step; allow retry with reshuffled options
+        setTimeout(renderChallengeStep, 900);
+      }
+    }
+
+    function skipChallengeStep() {
+      challengeIndex++;
+      renderChallengeStep();
+    }
+
+    function endChallenge() {
+      challengePanel.style.display = 'none';
+      bartenderImg.src = `bartender_idle.${IMAGE_EXT}`;
+    }
+
+    // --- Helpers ---
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, s => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[s]));
+    }
+    function shuffle(arr) {
+      return arr.map(v => ({v, r: Math.random()}))
+                .sort((a,b) => a.r - b.r)
+                .map(o => o.v);
+    }
+
+    // Init
+    setImageExt('png'); // default; switch to jpg using the sidebar buttons
+    browseAll();
+  </script>
+</body>
+</html>
+
+
